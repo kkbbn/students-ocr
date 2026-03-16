@@ -1,0 +1,4 @@
+pponnxcr==2.0
+onnxruntime==1.16.2
+opencv-python==4.8.1.78
+numpy==1.26.1
