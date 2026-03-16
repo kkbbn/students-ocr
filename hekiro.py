@@ -92,6 +92,13 @@ def update_sheet(service, spreadsheet_id, sheet_name, csv_file):
                     'range': f"'{sheet_name}'!G{row_num}:J{row_num}",
                     'values': [[row[3], row[4], row[5], row[6]]],
                 })
+            # Equipment levels: CSV[7..9] -> columns L,M,N (empty -> なし)
+            if len(row) > 9:
+                equips = [v if v else 'なし' for v in row[7:10]]
+                updates.append({
+                    'range': f"'{sheet_name}'!L{row_num}:N{row_num}",
+                    'values': [equips],
+                })
         else:
             print(f"Warning: '{name}' not found in sheet")
 
