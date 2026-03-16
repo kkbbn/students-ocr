@@ -50,3 +50,10 @@ Create OAuth Client ID (APIs & Services > Credentials):
 3. Name: anything (e.g. "students-ocr")
 4. Click Create
 5. Click Download JSON and save it as credentials.json in this project directory
+
+You can then update Hekiro's students spreadsheet.
+
+```
+$ python3.10 ocr.py *.png > output.csv
+$ python3.10 hekiro.py output.csv 'https://docs.google.com/spreadsheets/d/[SHEET_ID]/edit?gid=[GID]'
+```

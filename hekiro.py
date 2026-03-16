@@ -81,6 +81,11 @@ def update_sheet(service, spreadsheet_id, sheet_name, csv_file):
                     'range': f"'{sheet_name}'!C{row_num}",
                     'values': [[row[1]]],
                 })
+            if len(row) > 2 and row[2]:
+                updates.append({
+                    'range': f"'{sheet_name}'!E{row_num}",
+                    'values': [[row[2]]],
+                })
         else:
             print(f"Warning: '{name}' not found in sheet")
 
