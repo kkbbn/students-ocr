@@ -23,11 +23,14 @@ OCR_CORRECTIONS = str.maketrans(
 SKILL_NAMES = ["EX", "Normal", "Passive", "Sub"]
 
 def filter_white_text(image):
-    """Keep only white (low-saturation, high-value) pixels to remove ghost images from semi-transparent backgrounds."""
+    """Black out ghost images from semi-transparent backgrounds, keeping original text pixels intact."""
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    mask = (hsv[:, :, 1] < 50) & (hsv[:, :, 2] > 160)
-    result = np.zeros_like(image)
-    result[mask] = [255, 255, 255]
+    white_mask = (hsv[:, :, 1] < 50) & (hsv[:, :, 2] > 160)
+    cols_with_text = np.any(white_mask, axis=0)
+    result = image.copy()
+    if cols_with_text.any():
+        last_col = np.max(np.where(cols_with_text))
+        result[:, last_col + 5:] = 0
     return result
 
 def ocr_area(image_mat, fromxy, toxy, ocr_lang=OCR_LANG.EN, white_text=False):
