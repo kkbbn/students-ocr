@@ -50,6 +50,21 @@ def parse_skill_lv(text):
         return "MAX"
     return int(text.replace("Lv.", ""))
 
+def is_yellow_star(pixel):
+    b, g, r = pixel
+    return int(r) > 180 and int(g) > 150 and int(b) < 120
+
+def is_blue_star(pixel):
+    b, g, r = pixel
+    return int(b) > 200 and int(g) > 200 and int(r) < 180
+
+def count_stars(image):
+    yellow_star_xs = [271, 284, 297, 310, 324]
+    blue_star_xs = [1012, 1028, 1044, 1061, 1077]
+    yellow = sum(1 for x in yellow_star_xs if is_yellow_star(image[575, x]))
+    blue = sum(1 for x in blue_star_xs if is_blue_star(image[512, x]))
+    return yellow, blue
+
 def process_image(image):
     name, _ = ocr_area(image, [70, 560], [265, 590], OCR_LANG.JA, white_text=True)
     name = name.translate(OCR_CORRECTIONS)
@@ -57,6 +72,7 @@ def process_image(image):
     lv = int(re.sub(r'\D', '', lv_text))
     bond_text, _ = ocr_area(image, [45, 560], [75, 580])
     bond = int(re.sub(r'\D', '', bond_text))
+    yellow_stars, blue_stars = count_stars(image)
 
     wb_coords = [
         [774, 231, 819, 254],   # HP
@@ -88,6 +104,7 @@ def process_image(image):
         'name': name,
         'lv': lv,
         'bond': bond,
+        'stars': '★' * yellow_stars + '☆' * blue_stars,
         'skills': skill_lvs,
         'equip': equip_tiers,
         'wb': wb_lvs,
@@ -98,7 +115,7 @@ def fmt(value):
 
 def print_result(result):
     r = result
-    fields = [r['name'], r['lv']] + r['skills'] + r['equip'] + [r['bond']] + r['wb']
+    fields = [r['name'], r['stars'], r['lv']] + r['skills'] + r['equip'] + [r['bond']] + r['wb']
     print(",".join(fmt(f) for f in fields))
 
 def main():
