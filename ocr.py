@@ -82,10 +82,20 @@ def process_image(image):
         m = re.search(r'T(\d+)', equip_text)
         equip_tiers.append(int(m.group(1)) if m else None)
 
-    skills_str = "/".join(str(s) for s in skill_lvs)
-    equip_str = "/".join(f"T{t}" if t is not None else "None" for t in equip_tiers)
-    wb_str = "/".join(str(w) if w is not None else "None" for w in wb_lvs)
-    print(f"{name} Lv.{lv} Bond:{bond} Skills:{skills_str} Equip:{equip_str} WB:{wb_str}")
+    return {
+        'name': name,
+        'lv': lv,
+        'bond': bond,
+        'skills': skill_lvs,
+        'equip': equip_tiers,
+        'wb': wb_lvs,
+    }
+
+def print_result(result):
+    skills_str = "/".join(str(s) for s in result['skills'])
+    equip_str = "/".join(f"T{t}" if t is not None else "None" for t in result['equip'])
+    wb_str = "/".join(str(w) if w is not None else "None" for w in result['wb'])
+    print(f"{result['name']} Lv.{result['lv']} Bond:{result['bond']} Skills:{skills_str} Equip:{equip_str} WB:{wb_str}")
 
 def main():
     if len(sys.argv) < 2:
@@ -98,6 +108,7 @@ def main():
             print(f"Error: Could not read {filepath}", file=sys.stderr)
             continue
         result = process_image(image)
+        print_result(result)
 
 if __name__ == "__main__":
     main()
