@@ -86,6 +86,12 @@ def update_sheet(service, spreadsheet_id, sheet_name, csv_file):
                     'range': f"'{sheet_name}'!E{row_num}",
                     'values': [[row[2]]],
                 })
+            # Skill levels: CSV[3..6] -> columns G,H,I,J
+            if len(row) > 6:
+                updates.append({
+                    'range': f"'{sheet_name}'!G{row_num}:J{row_num}",
+                    'values': [[row[3], row[4], row[5], row[6]]],
+                })
         else:
             print(f"Warning: '{name}' not found in sheet")
 
