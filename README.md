@@ -11,7 +11,7 @@ pip3.10 install -r requirements.txt
 ## Run
 
 ```
-python3.10 ocr.py
+python3.10 ocr.py *.png
 ```
 
 ## Screenshot size

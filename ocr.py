@@ -22,11 +22,27 @@ def ocr_area(image_mat, fromxy, toxy, ocr_lang=OCR_LANG.EN):
     score = result[1] if not isnan(result[1]) else 0
     return text, score
 
+SKILL_NAMES = ["EX", "Normal", "Passive", "Sub"]
+
+def parse_skill_lv(text):
+    text = text.strip()
+    if text == "MAX":
+        return "MAX"
+    return int(text.replace("Lv.", ""))
+
 def process_image(image):
     name, name_score = ocr_area(image, [70, 560], [265, 590], OCR_LANG.JA)
     lv_text, lv_score = ocr_area(image, [5, 590], [80, 620])
     lv = int(lv_text.replace("Lv.", ""))
-    print(f"{name} Lv.{lv} (confidence: {name_score:.4f}, {lv_score:.4f})")
+
+    skill_lvs = []
+    for i in range(4):
+        x_start = 700 + i * 100
+        skill_text, _ = ocr_area(image, [x_start, 400], [x_start + 80, 425])
+        skill_lvs.append(parse_skill_lv(skill_text))
+
+    skills_str = "/".join(str(s) for s in skill_lvs)
+    print(f"{name} Lv.{lv} Skills:{skills_str}")
 
 def main():
     if len(sys.argv) < 2:
