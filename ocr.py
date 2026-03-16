@@ -4,21 +4,29 @@ from enum import Enum
 from math import isnan
 from pponnxcr import TextSystem
 
-OCR_SYS_JA = TextSystem('ja')
-
 class OCR_LANG(Enum):
     EN = 1
     JA = 4
 
-def ocr_area(image_mat, fromxy, toxy):
+OCR_SYSTEMS = {
+    OCR_LANG.EN: TextSystem('en'),
+    OCR_LANG.JA: TextSystem('ja'),
+}
+
+def ocr_area(image_mat, fromxy, toxy, ocr_lang=OCR_LANG.EN):
     fromx, fromy = fromxy
     tox, toy = toxy
-    ocr_sys = OCR_SYS_JA
     cropped = image_mat[fromy:toy, fromx:tox]
-    result = ocr_sys.ocr_single_line(cropped)
+    result = OCR_SYSTEMS[ocr_lang].ocr_single_line(cropped)
     text = result[0].strip().replace("９", "9")
     score = result[1] if not isnan(result[1]) else 0
     return text, score
+
+def process_image(image):
+    name, name_score = ocr_area(image, [70, 560], [265, 590], OCR_LANG.JA)
+    lv_text, lv_score = ocr_area(image, [5, 590], [80, 620])
+    lv = int(lv_text.replace("Lv.", ""))
+    print(f"{name} Lv.{lv} (confidence: {name_score:.4f}, {lv_score:.4f})")
 
 def main():
     if len(sys.argv) < 2:
@@ -30,8 +38,7 @@ def main():
         if image is None:
             print(f"Error: Could not read {filepath}", file=sys.stderr)
             continue
-        text, score = ocr_area(image, [70, 560], [265, 590])
-        print(f"{text} (confidence: {score:.4f})")
+        result = process_image(image)
 
 if __name__ == "__main__":
     main()
