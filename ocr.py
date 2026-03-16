@@ -1,6 +1,7 @@
 import re
 import sys
 import cv2
+import numpy as np
 from enum import Enum
 from math import isnan
 from pponnxcr import TextSystem
@@ -14,10 +15,20 @@ OCR_SYSTEMS = {
     OCR_LANG.JA: TextSystem('ja'),
 }
 
-def ocr_area(image_mat, fromxy, toxy, ocr_lang=OCR_LANG.EN):
+def filter_white_text(image):
+    """Keep only white (low-saturation, high-value) pixels to remove ghost images from semi-transparent backgrounds."""
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    mask = (hsv[:, :, 1] < 50) & (hsv[:, :, 2] > 160)
+    result = np.zeros_like(image)
+    result[mask] = [255, 255, 255]
+    return result
+
+def ocr_area(image_mat, fromxy, toxy, ocr_lang=OCR_LANG.EN, white_text=False):
     fromx, fromy = fromxy
     tox, toy = toxy
     cropped = image_mat[fromy:toy, fromx:tox]
+    if white_text:
+        cropped = filter_white_text(cropped)
     result = OCR_SYSTEMS[ocr_lang].ocr_single_line(cropped)
     text = result[0].strip().replace("９", "9")
     score = result[1] if not isnan(result[1]) else 0
@@ -32,7 +43,7 @@ def parse_skill_lv(text):
     return int(text.replace("Lv.", ""))
 
 def process_image(image):
-    name, name_score = ocr_area(image, [70, 560], [265, 590], OCR_LANG.JA)
+    name, name_score = ocr_area(image, [70, 560], [265, 590], OCR_LANG.JA, white_text=True)
     lv_text, lv_score = ocr_area(image, [5, 590], [80, 620])
     lv = int(lv_text.replace("Lv.", ""))
     bond_text, _ = ocr_area(image, [45, 560], [75, 580])
@@ -72,7 +83,7 @@ def main():
         print(f"Usage: {sys.argv[0]} <image1> [image2 ...]", file=sys.stderr)
         sys.exit(1)
 
-    for filepath in sys.argv[1:]:
+    for filepath in sorted(sys.argv[1:]):
         image = cv2.imread(filepath)
         if image is None:
             print(f"Error: Could not read {filepath}", file=sys.stderr)
