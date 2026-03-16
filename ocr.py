@@ -15,6 +15,13 @@ OCR_SYSTEMS = {
     OCR_LANG.JA: TextSystem('ja'),
 }
 
+OCR_CORRECTIONS = str.maketrans(
+    '毛三工力口し（）',
+    'モミエカロレ()',
+)
+
+SKILL_NAMES = ["EX", "Normal", "Passive", "Sub"]
+
 def filter_white_text(image):
     """Keep only white (low-saturation, high-value) pixels to remove ghost images from semi-transparent backgrounds."""
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -30,11 +37,9 @@ def ocr_area(image_mat, fromxy, toxy, ocr_lang=OCR_LANG.EN, white_text=False):
     if white_text:
         cropped = filter_white_text(cropped)
     result = OCR_SYSTEMS[ocr_lang].ocr_single_line(cropped)
-    text = result[0].strip().replace("９", "9")
+    text = result[0].strip()
     score = result[1] if not isnan(result[1]) else 0
     return text, score
-
-SKILL_NAMES = ["EX", "Normal", "Passive", "Sub"]
 
 def parse_skill_lv(text):
     text = text.strip()
@@ -44,6 +49,7 @@ def parse_skill_lv(text):
 
 def process_image(image):
     name, name_score = ocr_area(image, [70, 560], [265, 590], OCR_LANG.JA, white_text=True)
+    name = name.translate(OCR_CORRECTIONS)
     lv_text, lv_score = ocr_area(image, [5, 590], [80, 620])
     lv = int(re.sub(r'\D', '', lv_text))
     bond_text, _ = ocr_area(image, [45, 560], [75, 580])
