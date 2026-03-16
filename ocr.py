@@ -51,9 +51,9 @@ def parse_skill_lv(text):
     return int(text.replace("Lv.", ""))
 
 def process_image(image):
-    name, name_score = ocr_area(image, [70, 560], [265, 590], OCR_LANG.JA, white_text=True)
+    name, _ = ocr_area(image, [70, 560], [265, 590], OCR_LANG.JA, white_text=True)
     name = name.translate(OCR_CORRECTIONS)
-    lv_text, lv_score = ocr_area(image, [5, 590], [80, 620])
+    lv_text, _ = ocr_area(image, [5, 590], [80, 620])
     lv = int(re.sub(r'\D', '', lv_text))
     bond_text, _ = ocr_area(image, [45, 560], [75, 580])
     bond = int(re.sub(r'\D', '', bond_text))
@@ -69,11 +69,13 @@ def process_image(image):
         m = re.search(r'[Ll][Vv]\.?(\d+)', text)
         wb_lvs.append(int(m.group(1)) if m else None)
 
+    max_skill_lvs = [5, 10, 10, 10]
     skill_lvs = []
     for i in range(4):
         x_start = 700 + i * 100
         skill_text, _ = ocr_area(image, [x_start, 400], [x_start + 80, 425])
-        skill_lvs.append(parse_skill_lv(skill_text))
+        skill_lv = parse_skill_lv(skill_text)
+        skill_lvs.append(max_skill_lvs[i] if skill_lv == "MAX" else skill_lv)
 
     equip_tiers = []
     for i in range(4):
@@ -91,11 +93,13 @@ def process_image(image):
         'wb': wb_lvs,
     }
 
+def fmt(value):
+    return "" if value is None else str(value)
+
 def print_result(result):
-    skills_str = "/".join(str(s) for s in result['skills'])
-    equip_str = "/".join(f"T{t}" if t is not None else "None" for t in result['equip'])
-    wb_str = "/".join(str(w) if w is not None else "None" for w in result['wb'])
-    print(f"{result['name']} Lv.{result['lv']} Bond:{result['bond']} Skills:{skills_str} Equip:{equip_str} WB:{wb_str}")
+    r = result
+    fields = [r['name'], r['lv']] + r['skills'] + r['equip'] + [r['bond']] + r['wb']
+    print(",".join(fmt(f) for f in fields))
 
 def main():
     if len(sys.argv) < 2:
