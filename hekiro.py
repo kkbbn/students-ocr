@@ -124,6 +124,12 @@ def update_sheet(service, spreadsheet_id, sheet_name, csv_file):
                         'range': f"'{sheet_name}'!O{row_num}",
                         'values': [['なし']],
                     })
+            # 絆: CSV[11] -> column P
+            if len(row) > 11 and row[11]:
+                updates.append({
+                    'range': f"'{sheet_name}'!P{row_num}",
+                    'values': [[row[11]]],
+                })
         else:
             print(f"Warning: '{name}' not found in sheet")
 
