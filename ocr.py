@@ -1,3 +1,4 @@
+import re
 import sys
 import cv2
 from enum import Enum
@@ -41,8 +42,16 @@ def process_image(image):
         skill_text, _ = ocr_area(image, [x_start, 400], [x_start + 80, 425])
         skill_lvs.append(parse_skill_lv(skill_text))
 
+    equip_tiers = []
+    for i in range(4):
+        x_start = 690 + i * 90
+        equip_text, _ = ocr_area(image, [x_start, 616], [x_start + 30, 632])
+        m = re.search(r'T(\d+)', equip_text)
+        equip_tiers.append(int(m.group(1)) if m else None)
+
     skills_str = "/".join(str(s) for s in skill_lvs)
-    print(f"{name} Lv.{lv} Skills:{skills_str}")
+    equip_str = "/".join(f"T{t}" if t is not None else "None" for t in equip_tiers)
+    print(f"{name} Lv.{lv} Skills:{skills_str} Equip:{equip_str}")
 
 def main():
     if len(sys.argv) < 2:
