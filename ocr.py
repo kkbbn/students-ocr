@@ -16,8 +16,8 @@ OCR_SYSTEMS = {
 }
 
 OCR_CORRECTIONS = str.maketrans(
-    '毛三工力口し（）',
-    'モミエカロレ()',
+    '毛三工力口し（）*',
+    'モミエカロレ()＊',
 )
 
 SKILL_NAMES = ["EX", "Normal", "Passive", "Sub"]
