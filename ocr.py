@@ -45,7 +45,7 @@ def parse_skill_lv(text):
 def process_image(image):
     name, name_score = ocr_area(image, [70, 560], [265, 590], OCR_LANG.JA, white_text=True)
     lv_text, lv_score = ocr_area(image, [5, 590], [80, 620])
-    lv = int(lv_text.replace("Lv.", ""))
+    lv = int(re.sub(r'\D', '', lv_text))
     bond_text, _ = ocr_area(image, [45, 560], [75, 580])
     bond = int(re.sub(r'\D', '', bond_text))
 
