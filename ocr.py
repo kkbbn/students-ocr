@@ -16,8 +16,8 @@ OCR_SYSTEMS = {
 }
 
 OCR_CORRECTIONS = str.maketrans(
-    '毛三工力口し（）*',
-    'モミエカロレ()＊',
+    '八毛三工力口し（）*',
+    'ハモミエカロレ()＊',
 )
 
 SKILL_NAMES = ["EX", "Normal", "Passive", "Sub"]
@@ -67,7 +67,7 @@ def count_stars(image):
 
 def process_image(image):
     name, _ = ocr_area(image, [70, 560], [265, 590], OCR_LANG.JA, white_text=True)
-    name = name.translate(OCR_CORRECTIONS)
+    name = name.translate(OCR_CORRECTIONS).replace(" ", "")
     lv_text, _ = ocr_area(image, [5, 590], [80, 620])
     lv = int(re.sub(r'\D', '', lv_text))
     bond_text, _ = ocr_area(image, [45, 560], [75, 580])

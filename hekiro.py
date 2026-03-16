@@ -1,3 +1,4 @@
+import csv
 import os
 import sys
 from google.auth.transport.requests import Request
@@ -70,7 +71,49 @@ def main():
     else:
         print(f"Warning: Could not find sheet with gid={gid}, will use first sheet")
 
-    print("Authentication successful. Ready to update sheets.")
+    # Read CSV file
+    csv_names = []
+    with open(csv_file, newline='', encoding='utf-8') as f:
+        reader = csv.reader(f)
+        for row in reader:
+            if row:
+                csv_names.append(row[0])
+
+    # Fetch all student names from column B (starting at row 3, after headers)
+    DATA_START_ROW = 3
+    name_range = f"'{sheet_name}'!B{DATA_START_ROW}:B"
+    result = service.spreadsheets().values().get(
+        spreadsheetId=spreadsheet_id, range=name_range
+    ).execute()
+    sheet_names = [row[0] if row else '' for row in result.get('values', [])]
+
+    # Build a map from name -> row number (1-indexed in the sheet)
+    name_to_row = {}
+    for i, name in enumerate(sheet_names):
+        if name:
+            name_to_row[name] = DATA_START_ROW + i
+
+    # For each CSV entry, check 所持状況 and update
+    updates = []
+    for name in csv_names:
+        if name in name_to_row:
+            row_num = name_to_row[name]
+            updates.append({
+                'range': f"'{sheet_name}'!A{row_num}",
+                'values': [['TRUE']],
+            })
+        else:
+            print(f"Warning: '{name}' not found in sheet")
+
+    # Batch update 所持状況
+    if updates:
+        service.spreadsheets().values().batchUpdate(
+            spreadsheetId=spreadsheet_id,
+            body={'valueInputOption': 'USER_ENTERED', 'data': updates}
+        ).execute()
+        print(f"Updated 所持状況 for {len(updates)} students.")
+    else:
+        print("No updates to make.")
 
 if __name__ == '__main__':
     main()
