@@ -35,6 +35,8 @@ def process_image(image):
     name, name_score = ocr_area(image, [70, 560], [265, 590], OCR_LANG.JA)
     lv_text, lv_score = ocr_area(image, [5, 590], [80, 620])
     lv = int(lv_text.replace("Lv.", ""))
+    bond_text, _ = ocr_area(image, [45, 560], [75, 580])
+    bond = int(re.sub(r'\D', '', bond_text))
 
     skill_lvs = []
     for i in range(4):
@@ -51,7 +53,7 @@ def process_image(image):
 
     skills_str = "/".join(str(s) for s in skill_lvs)
     equip_str = "/".join(f"T{t}" if t is not None else "None" for t in equip_tiers)
-    print(f"{name} Lv.{lv} Skills:{skills_str} Equip:{equip_str}")
+    print(f"{name} Lv.{lv} Bond:{bond} Skills:{skills_str} Equip:{equip_str}")
 
 def main():
     if len(sys.argv) < 2:
