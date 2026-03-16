@@ -130,6 +130,13 @@ def update_sheet(service, spreadsheet_id, sheet_name, csv_file):
                     'range': f"'{sheet_name}'!P{row_num}",
                     'values': [[row[11]]],
                 })
+            # WB levels: CSV[12..14] -> columns Q,R,S (empty -> なし)
+            if len(row) > 14:
+                wb = [v if v else 'なし' for v in row[12:15]]
+                updates.append({
+                    'range': f"'{sheet_name}'!Q{row_num}:S{row_num}",
+                    'values': [wb],
+                })
         else:
             print(f"Warning: '{name}' not found in sheet")
 
