@@ -38,6 +38,17 @@ def process_image(image):
     bond_text, _ = ocr_area(image, [45, 560], [75, 580])
     bond = int(re.sub(r'\D', '', bond_text))
 
+    wb_coords = [
+        [774, 231, 819, 254],   # HP
+        [996, 233, 1038, 251],  # ATK
+        [1000, 271, 1045, 291], # Heal
+    ]
+    wb_lvs = []
+    for x1, y1, x2, y2 in wb_coords:
+        text, _ = ocr_area(image, [x1, y1], [x2, y2])
+        m = re.search(r'[Ll][Vv]\.?(\d+)', text)
+        wb_lvs.append(int(m.group(1)) if m else None)
+
     skill_lvs = []
     for i in range(4):
         x_start = 700 + i * 100
@@ -53,7 +64,8 @@ def process_image(image):
 
     skills_str = "/".join(str(s) for s in skill_lvs)
     equip_str = "/".join(f"T{t}" if t is not None else "None" for t in equip_tiers)
-    print(f"{name} Lv.{lv} Bond:{bond} Skills:{skills_str} Equip:{equip_str}")
+    wb_str = "/".join(str(w) if w is not None else "None" for w in wb_lvs)
+    print(f"{name} Lv.{lv} Bond:{bond} Skills:{skills_str} Equip:{equip_str} WB:{wb_str}")
 
 def main():
     if len(sys.argv) < 2:
