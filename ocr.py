@@ -20,6 +20,13 @@ OCR_CORRECTIONS = str.maketrans(
     'ハモミエカロレ()＊',
 )
 
+# Small kana at the start of a name are OCR errors (e.g. ョシミ→ヨシミ)
+SMALL_TO_LARGE_KANA = str.maketrans('ァィゥェォヵヶッャュョヮ', 'アイウエオカケツヤユヨワ')
+
+NAME_FIXES = {
+    'チェリン': 'チェリノ',
+}
+
 SKILL_NAMES = ["EX", "Normal", "Passive", "Sub"]
 
 def filter_white_text(image):
@@ -67,7 +74,15 @@ def count_stars(image):
 
 def process_image(image):
     name, _ = ocr_area(image, [70, 560], [265, 590], OCR_LANG.JA, white_text=True)
-    name = name.translate(OCR_CORRECTIONS).replace(" ", "")
+    name = name.translate(OCR_CORRECTIONS).replace(" ", "").replace("((", "(").replace("))", ")")
+    if name:
+        fixed_first = name[0].translate(SMALL_TO_LARGE_KANA)
+        if fixed_first != name[0]:
+            name = fixed_first + name[1:]
+    # Extract base name (before parenthesized suffix) for name-specific fixes
+    base = name.split('(')[0]
+    if base in NAME_FIXES:
+        name = NAME_FIXES[base] + name[len(base):]
     lv_text, _ = ocr_area(image, [5, 590], [80, 620])
     lv = int(re.sub(r'\D', '', lv_text))
     bond_text, _ = ocr_area(image, [45, 560], [75, 580])
