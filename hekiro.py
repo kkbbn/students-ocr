@@ -1,0 +1,76 @@
+import os
+import sys
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+CREDENTIALS_FILE = os.path.join(os.path.dirname(__file__), 'credentials.json')
+TOKEN_FILE = os.path.join(os.path.dirname(__file__), 'token.json')
+
+def authenticate():
+    creds = None
+    if os.path.exists(TOKEN_FILE):
+        creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            if not os.path.exists(CREDENTIALS_FILE):
+                print(f"Error: {CREDENTIALS_FILE} not found.")
+                print("Download OAuth 2.0 Client ID credentials from Google Cloud Console")
+                print("and save them as credentials.json in this directory.")
+                sys.exit(1)
+            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
+            creds = flow.run_local_server(port=0)
+        with open(TOKEN_FILE, 'w') as token:
+            token.write(creds.to_json())
+        print(f"Credentials saved to {TOKEN_FILE}")
+    return creds
+
+def parse_spreadsheet_url(url):
+    import re
+    match = re.search(r'/spreadsheets/d/([a-zA-Z0-9-_]+)', url)
+    if not match:
+        print(f"Error: Could not parse spreadsheet ID from URL: {url}")
+        sys.exit(1)
+    spreadsheet_id = match.group(1)
+    gid = None
+    gid_match = re.search(r'gid=(\d+)', url)
+    if gid_match:
+        gid = gid_match.group(1)
+    return spreadsheet_id, gid
+
+def main():
+    if len(sys.argv) < 3:
+        print(f"Usage: {sys.argv[0]} <csv_file> <spreadsheet_url>")
+        sys.exit(1)
+
+    csv_file = sys.argv[1]
+    spreadsheet_url = sys.argv[2]
+    spreadsheet_id, gid = parse_spreadsheet_url(spreadsheet_url)
+
+    creds = authenticate()
+    service = build('sheets', 'v4', credentials=creds)
+
+    # Verify write access by reading spreadsheet metadata
+    spreadsheet = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+    print(f"Successfully accessed spreadsheet: {spreadsheet['properties']['title']}")
+
+    # Find sheet name by gid
+    sheet_name = None
+    for sheet in spreadsheet['sheets']:
+        props = sheet['properties']
+        if gid is not None and str(props['sheetId']) == gid:
+            sheet_name = props['title']
+            break
+    if sheet_name:
+        print(f"Target sheet: {sheet_name} (gid={gid})")
+    else:
+        print(f"Warning: Could not find sheet with gid={gid}, will use first sheet")
+
+    print("Authentication successful. Ready to update sheets.")
+
+if __name__ == '__main__':
+    main()
