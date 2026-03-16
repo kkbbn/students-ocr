@@ -52,7 +52,7 @@ def update_sheet(service, spreadsheet_id, sheet_name, csv_file):
             if row:
                 csv_rows.append(row)
 
-    # Fetch all student names from column B (starting at row 3, after headers)
+    # Fetch student names (B) and 愛用品 (O) from the sheet
     DATA_START_ROW = 3
     name_range = f"'{sheet_name}'!B{DATA_START_ROW}:B"
     result = service.spreadsheets().values().get(
@@ -60,13 +60,22 @@ def update_sheet(service, spreadsheet_id, sheet_name, csv_file):
     ).execute()
     sheet_names = [row[0] if row else '' for row in result.get('values', [])]
 
-    # Build a map from name -> row number (1-indexed in the sheet)
+    fav_item_range = f"'{sheet_name}'!O{DATA_START_ROW}:O"
+    fav_item_result = service.spreadsheets().values().get(
+        spreadsheetId=spreadsheet_id, range=fav_item_range
+    ).execute()
+    fav_item_values = fav_item_result.get('values', [])
+
+    # Build maps from name -> row number and name -> existing 愛用品
     name_to_row = {}
+    name_to_fav_item = {}
     for i, name in enumerate(sheet_names):
         if name:
             name_to_row[name] = DATA_START_ROW + i
+            fav_item = fav_item_values[i][0] if i < len(fav_item_values) and fav_item_values[i] else ''
+            name_to_fav_item[name] = fav_item
 
-    # For each CSV entry, update 所持状況 and レアリティ
+    # For each CSV entry, update the sheet
     updates = []
     for row in csv_rows:
         name = row[0]
@@ -99,6 +108,22 @@ def update_sheet(service, spreadsheet_id, sheet_name, csv_file):
                     'range': f"'{sheet_name}'!L{row_num}:N{row_num}",
                     'values': [equips],
                 })
+            # 愛用品: CSV[10] -> column O
+            if len(row) > 10:
+                csv_fav_item = row[10]
+                existing_fav_item = name_to_fav_item.get(name, '')
+                if csv_fav_item:
+                    # Has 愛用品 tier: write 1 or 2
+                    updates.append({
+                        'range': f"'{sheet_name}'!O{row_num}",
+                        'values': [[csv_fav_item]],
+                    })
+                elif existing_fav_item:
+                    # Cell is non-empty but CSV has no value: write なし
+                    updates.append({
+                        'range': f"'{sheet_name}'!O{row_num}",
+                        'values': [['なし']],
+                    })
         else:
             print(f"Warning: '{name}' not found in sheet")
 
