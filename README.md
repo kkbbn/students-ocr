@@ -6,8 +6,10 @@ OCR screenshots of students
 
 ### Setup
 
+Install Python 3 and dependencies. The scripts are tested with Python 3.10.
+
 ```
-$ pip3.10 install -r requirements.txt
+$ pip3 install -r requirements.txt
 ```
 
 ### Run
@@ -15,7 +17,7 @@ $ pip3.10 install -r requirements.txt
 The size of input screenshots must be 1280x720.
 
 ```
-$ python3.10 ocr.py *.png
+$ python3 ocr.py *.png
 アイリ(バンド),★★★★★☆☆,1,76,3,5,5,5,7,7,5,,21,,,
 アイリ,★★★★★☆☆☆☆,1,20,1,5,5,5,1,1,1,,21,,,
 アオバ,★★★★★☆,30,90,5,9,9,9,10,10,10,,12,,,
@@ -60,8 +62,8 @@ You can update [ブルアカ育成計算機](https://x.com/makoto_149/status/202
 Open a spreadsheet, click the `ﾃﾞｰﾀｼｰﾄ`  sheet, and copy the URL. Give it to `calc.py` as follows:
 
 ```
-$ python3.10 ocr.py *.png > output.csv
-$ python3.10 calc.py output.csv 'https://docs.google.com/spreadsheets/d/[SHEET_ID]/edit?gid=[GID]'
+$ python3 ocr.py *.png > output.csv
+$ python3 calc.py output.csv 'https://docs.google.com/spreadsheets/d/[SHEET_ID]/edit?gid=[GID]'
 ```
 
 ### Update: 育成状況確認シート
@@ -71,6 +73,6 @@ You can update 育成状況確認シート used by 壁炉の家・暖炉の家.
 Open a spreadsheet, click the `育成状況確認` sheet, and copy the URL. Give it to `hekiro.py` as follows:
 
 ```
-$ python3.10 ocr.py *.png > output.csv
-$ python3.10 hekiro.py output.csv 'https://docs.google.com/spreadsheets/d/[SHEET_ID]/edit?gid=[GID]'
+$ python3 ocr.py *.png > output.csv
+$ python3 hekiro.py output.csv 'https://docs.google.com/spreadsheets/d/[SHEET_ID]/edit?gid=[GID]'
 ```
