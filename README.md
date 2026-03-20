@@ -6,7 +6,7 @@
 
 ### セットアップ
 
-Python 3 と依存パッケージをインストールしてください。スクリプトは Python 3.10 でテスト済みです。
+Python 3 と依存パッケージをインストールしてください。Python 3.10 で動作を確認しています。
 
 ```
 $ pip3 install -r requirements.txt
@@ -15,6 +15,7 @@ $ pip3 install -r requirements.txt
 ### 実行
 
 入力スクリーンショットのサイズは 1280x720 である必要があります。
+解像度 1280x720 に設定したMuMu Playerでスクリーンショットを撮り、動作を確認しています。
 
 ```
 $ python3 ocr.py *.png
