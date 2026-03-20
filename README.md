@@ -1,20 +1,20 @@
 # students-ocr
 
-OCR screenshots of students
+生徒のスクリーンショットをOCRするツール
 
 ## OCR
 
-### Setup
+### セットアップ
 
-Install Python 3 and dependencies. The scripts are tested with Python 3.10.
+Python 3 と依存パッケージをインストールしてください。スクリプトは Python 3.10 でテスト済みです。
 
 ```
 $ pip3 install -r requirements.txt
 ```
 
-### Run
+### 実行
 
-The size of input screenshots must be 1280x720.
+入力スクリーンショットのサイズは 1280x720 である必要があります。
 
 ```
 $ python3 ocr.py *.png
@@ -31,46 +31,46 @@ $ python3 ocr.py *.png
 
 ## Google Sheets
 
-### Setup
+### セットアップ
 
-1. Go to https://console.cloud.google.com/
-2. Create or select a project
-3. Enable the Google Sheets API (APIs & Services > Library)
+1. https://console.cloud.google.com/ にアクセス
+2. プロジェクトを作成または選択
+3. Google Sheets API を有効にする（APIs & Services > Library）
 
-Configure OAuth Consent Screen (APIs & Services > OAuth consent screen):
+OAuth 同意画面の設定（APIs & Services > OAuth consent screen）：
 
-1. Click Get Started
-2. App name: anything (e.g. "students-ocr")
-3. User support email: select your email
-4. Audience: select External
-5. Contact Information: enter your email
-6. Finish — agree and create
-7. Go to Audience (left sidebar) > under Test users, click Add users and add your own Google account email
+1. Get Started をクリック
+2. アプリ名：任意（例：「students-ocr」）
+3. ユーザーサポートメール：自分のメールアドレスを選択
+4. 対象：External を選択
+5. 連絡先情報：メールアドレスを入力
+6. 完了 — 同意して作成
+7. 左サイドバーの Audience に移動 > Test users の下で Add users をクリックし、自分の Google アカウントのメールアドレスを追加
 
-Create OAuth Client ID (APIs & Services > Credentials):
+OAuth クライアント ID の作成（APIs & Services > Credentials）：
 
-1. Click Create Credentials > OAuth client ID
-2. Application type: Desktop app
-3. Name: anything (e.g. "students-ocr")
-4. Click Create
-5. Click Download JSON and save it as credentials.json in this project directory
+1. Create Credentials > OAuth client ID をクリック
+2. アプリケーションの種類：デスクトップアプリ
+3. 名前：任意（例：「students-ocr」）
+4. Create をクリック
+5. Download JSON をクリックし、このプロジェクトディレクトリに credentials.json として保存
 
-### Update: ブルアカ育成計算機
+### 更新：ブルアカ育成計算機
 
-You can update [ブルアカ育成計算機](https://x.com/makoto_149/status/2020066203759440190).
+[ブルアカ育成計算機](https://x.com/makoto_149/status/2020066203759440190) を更新できます。
 
-Open a spreadsheet, click the `ﾃﾞｰﾀｼｰﾄ`  sheet, and copy the URL. Give it to `calc.py` as follows:
+スプレッドシートを開き、`ﾃﾞｰﾀｼｰﾄ` シートをクリックして URL をコピーします。以下のように `calc.py` に渡してください：
 
 ```
 $ python3 ocr.py *.png > output.csv
 $ python3 calc.py output.csv 'https://docs.google.com/spreadsheets/d/[SHEET_ID]/edit?gid=[GID]'
 ```
 
-### Update: 育成状況確認シート
+### 更新：育成状況確認シート
 
-You can update 育成状況確認シート used by 壁炉の家・暖炉の家.
+壁炉の家・暖炉の家で使用している育成状況確認シートを更新できます。
 
-Open a spreadsheet, click the `育成状況確認` sheet, and copy the URL. Give it to `hekiro.py` as follows:
+スプレッドシートを開き、`育成状況確認` シートをクリックして URL をコピーします。以下のように `hekiro.py` に渡してください：
 
 ```
 $ python3 ocr.py *.png > output.csv
