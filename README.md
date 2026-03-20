@@ -14,7 +14,7 @@ $ pip3 install -r requirements.txt
 
 ### 実行
 
-解像度 1280x720 の環境で生徒の基本情報のスクリーンショットを撮り、ocr.py に読み込ませてください。
+解像度 1280x720 の環境で生徒の基本情報の画面のスクリーンショットを撮り、ocr.py に読み込ませてください。
 解像度を 1280x720 に設定したMuMu Playerで動作を確認しています。
 
 ```
@@ -54,7 +54,7 @@ OAuth クライアント ID の作成（APIs & Services > Credentials）：
 2. アプリケーションの種類：デスクトップアプリ
 3. 名前：任意（例：「students-ocr」）
 4. Create をクリック
-5. Download JSON をクリックし、このプロジェクトディレクトリに credentials.json として保存
+5. Download JSON をクリックし、この students-ocr プロジェクトのフォルダに credentials.json として保存
 
 ### 更新：ブルアカ育成計算機
 
