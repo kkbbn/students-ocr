@@ -60,7 +60,7 @@ OAuth クライアント ID の作成（APIs & Services > Credentials）：
 
 [ブルアカ育成計算機](https://x.com/makoto_149/status/2020066203759440190) を更新できます。
 
-スプレッドシートを開き、`ﾃﾞｰﾀｼｰﾄ` シートをクリックして URL をコピーします。以下のように `calc.py` に渡してください：
+ブラウザ上でスプレッドシートを開き、`ﾃﾞｰﾀｼｰﾄ` シートをクリックして URL をコピーします。以下のように `calc.py` に渡してください：
 
 ```
 $ python3 ocr.py *.png > output.csv
@@ -71,7 +71,7 @@ $ python3 calc.py output.csv 'https://docs.google.com/spreadsheets/d/[SHEET_ID]/
 
 壁炉の家・暖炉の家で使用している育成状況確認シートを更新できます。
 
-スプレッドシートを開き、`育成状況確認` シートをクリックして URL をコピーします。以下のように `hekiro.py` に渡してください：
+ブラウザ上でスプレッドシートを開き、`育成状況確認` シートをクリックして URL をコピーします。以下のように `hekiro.py` に渡してください：
 
 ```
 $ python3 ocr.py *.png > output.csv
