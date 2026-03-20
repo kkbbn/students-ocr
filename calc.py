@@ -1,5 +1,6 @@
 import csv
 import os
+import re
 import sys
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -10,7 +11,7 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 CREDENTIALS_FILE = os.path.join(os.path.dirname(__file__), 'credentials.json')
 TOKEN_FILE = os.path.join(os.path.dirname(__file__), 'token.json')
 
-EXPECTED_SHEET_NAME = '育成状況確認'
+EXPECTED_SHEET_NAME = 'ﾃﾞｰﾀｼｰﾄ'
 
 def authenticate():
     creds = None
@@ -33,7 +34,6 @@ def authenticate():
     return creds
 
 def parse_spreadsheet_url(url):
-    import re
     match = re.search(r'/spreadsheets/d/([a-zA-Z0-9-_]+)', url)
     if not match:
         print(f"Error: Could not parse spreadsheet ID from URL: {url}")
@@ -45,8 +45,15 @@ def parse_spreadsheet_url(url):
         gid = gid_match.group(1)
     return spreadsheet_id, gid
 
+def normalize_name(name):
+    """Convert half-width parens to full-width for matching."""
+    return name.replace('(', '\uff08').replace(')', '\uff09')
+
+def parse_stars(star_str):
+    """Count ★ and ☆ in the star string."""
+    return star_str.count('\u2605'), star_str.count('\u2606')
+
 def update_sheet(service, spreadsheet_id, sheet_name, csv_file):
-    # Read CSV file
     csv_rows = []
     with open(csv_file, newline='', encoding='utf-8') as f:
         reader = csv.reader(f)
@@ -54,96 +61,113 @@ def update_sheet(service, spreadsheet_id, sheet_name, csv_file):
             if row:
                 csv_rows.append(row)
 
-    # Fetch student names (B) and 愛用品 (O) from the sheet
-    DATA_START_ROW = 3
+    # Fetch student names from column B
+    DATA_START_ROW = 7
     name_range = f"'{sheet_name}'!B{DATA_START_ROW}:B"
     result = service.spreadsheets().values().get(
         spreadsheetId=spreadsheet_id, range=name_range
     ).execute()
     sheet_names = [row[0] if row else '' for row in result.get('values', [])]
 
-    fav_item_range = f"'{sheet_name}'!O{DATA_START_ROW}:O"
-    fav_item_result = service.spreadsheets().values().get(
-        spreadsheetId=spreadsheet_id, range=fav_item_range
-    ).execute()
-    fav_item_values = fav_item_result.get('values', [])
-
-    # Build maps from name -> row number and name -> existing 愛用品
     name_to_row = {}
-    name_to_fav_item = {}
     for i, name in enumerate(sheet_names):
         if name:
             name_to_row[name] = DATA_START_ROW + i
-            fav_item = fav_item_values[i][0] if i < len(fav_item_values) and fav_item_values[i] else ''
-            name_to_fav_item[name] = fav_item
 
-    # For each CSV entry, update the sheet
+    # CSV columns:
+    # [0] name, [1] stars (★☆), [2] 固有Lv, [3] level, [4] EX skill,
+    # [5-7] skills (NS/PS/SS), [8-10] equipment, [11] 愛用品,
+    # [12] 絆ランク, [13-15] WB (HP/攻撃/治癒)
+    #
+    # 現在 columns (J,L,N,P,R,T,V,X,Z,AB,AD,AF,AH,AJ,AL,AN):
+    # J=Lv, L=★, N=固有(☆), P=固有Lv, R=EX, T=NS, V=PS, X=SS,
+    # Z=装備1, AB=装備2, AD=装備3, AF=絆ランク, AH=愛用品,
+    # AJ=HP開放, AL=攻撃開放, AN=治癒開放
+
     updates = []
     for row in csv_rows:
-        name = row[0]
-        if name in name_to_row:
-            row_num = name_to_row[name]
-            updates.append({
-                'range': f"'{sheet_name}'!A{row_num}",
-                'values': [['TRUE']],
-            })
-            if len(row) > 1 and row[1]:
-                updates.append({
-                    'range': f"'{sheet_name}'!C{row_num}",
-                    'values': [[row[1]]],
-                })
-            # CSV[2] is UE level (skipped)
-            if len(row) > 3 and row[3]:
-                updates.append({
-                    'range': f"'{sheet_name}'!E{row_num}",
-                    'values': [[row[3]]],
-                })
-            # Skill levels: CSV[4..7] -> columns G,H,I,J
-            if len(row) > 7:
-                updates.append({
-                    'range': f"'{sheet_name}'!G{row_num}:J{row_num}",
-                    'values': [[row[4], row[5], row[6], row[7]]],
-                })
-            # Equipment levels: CSV[8..10] -> columns L,M,N (empty -> なし)
-            if len(row) > 10:
-                equips = [v if v else 'なし' for v in row[8:11]]
-                updates.append({
-                    'range': f"'{sheet_name}'!L{row_num}:N{row_num}",
-                    'values': [equips],
-                })
-            # 愛用品: CSV[11] -> column O
-            if len(row) > 11:
-                csv_fav_item = row[11]
-                existing_fav_item = name_to_fav_item.get(name, '')
-                if csv_fav_item:
-                    # Has 愛用品 tier: write 1 or 2
-                    updates.append({
-                        'range': f"'{sheet_name}'!O{row_num}",
-                        'values': [[csv_fav_item]],
-                    })
-                elif existing_fav_item:
-                    # Cell is non-empty but CSV has no value: write なし
-                    updates.append({
-                        'range': f"'{sheet_name}'!O{row_num}",
-                        'values': [['なし']],
-                    })
-            # 絆: CSV[12] -> column P
-            if len(row) > 12 and row[12]:
-                updates.append({
-                    'range': f"'{sheet_name}'!P{row_num}",
-                    'values': [[row[12]]],
-                })
-            # WB levels: CSV[13..15] -> columns Q,R,S (empty -> なし)
-            if len(row) > 15:
-                wb = [v if v else 'なし' for v in row[13:16]]
-                updates.append({
-                    'range': f"'{sheet_name}'!Q{row_num}:S{row_num}",
-                    'values': [wb],
-                })
-        else:
-            print(f"Warning: '{name}' not found in sheet")
+        csv_name = row[0]
+        normalized_name = normalize_name(csv_name)
 
-    # Batch update
+        if csv_name in name_to_row:
+            row_num = name_to_row[csv_name]
+        elif normalized_name in name_to_row:
+            row_num = name_to_row[normalized_name]
+        else:
+            print(f"Warning: '{csv_name}' not found in sheet")
+            continue
+
+        # J: Level (CSV[3])
+        if len(row) > 3 and row[3]:
+            updates.append({
+                'range': f"'{sheet_name}'!J{row_num}",
+                'values': [[row[3]]],
+            })
+
+        # L: ★ count, N: ☆ count (from CSV[1])
+        if len(row) > 1 and row[1]:
+            star_count, unique_count = parse_stars(row[1])
+            updates.append({
+                'range': f"'{sheet_name}'!L{row_num}",
+                'values': [[star_count]],
+            })
+            updates.append({
+                'range': f"'{sheet_name}'!N{row_num}",
+                'values': [[unique_count]],
+            })
+
+        # P: CSV[2]
+        if len(row) > 2 and row[2]:
+            updates.append({
+                'range': f"'{sheet_name}'!P{row_num}",
+                'values': [[row[2]]],
+            })
+
+        # R: EX skill (CSV[4])
+        if len(row) > 4 and row[4]:
+            updates.append({
+                'range': f"'{sheet_name}'!R{row_num}",
+                'values': [[row[4]]],
+            })
+
+        # T, V, X: Skills (CSV[5-7])
+        for col, idx in [('T', 5), ('V', 6), ('X', 7)]:
+            if len(row) > idx and row[idx]:
+                updates.append({
+                    'range': f"'{sheet_name}'!{col}{row_num}",
+                    'values': [[row[idx]]],
+                })
+
+        # Z, AB, AD: Equipment (CSV[8-10])
+        for col, idx in [('Z', 8), ('AB', 9), ('AD', 10)]:
+            if len(row) > idx and row[idx]:
+                updates.append({
+                    'range': f"'{sheet_name}'!{col}{row_num}",
+                    'values': [[row[idx]]],
+                })
+
+        # AF: 絆ランク (CSV[12])
+        if len(row) > 12 and row[12]:
+            updates.append({
+                'range': f"'{sheet_name}'!AF{row_num}",
+                'values': [[row[12]]],
+            })
+
+        # AH: 愛用品 (CSV[11])
+        if len(row) > 11 and row[11]:
+            updates.append({
+                'range': f"'{sheet_name}'!AH{row_num}",
+                'values': [[row[11]]],
+            })
+
+        # AJ, AL, AN: WB (CSV[13-15])
+        for col, idx in [('AJ', 13), ('AL', 14), ('AN', 15)]:
+            if len(row) > idx and row[idx]:
+                updates.append({
+                    'range': f"'{sheet_name}'!{col}{row_num}",
+                    'values': [[row[idx]]],
+                })
+
     if updates:
         service.spreadsheets().values().batchUpdate(
             spreadsheetId=spreadsheet_id,
@@ -165,11 +189,9 @@ def main():
     creds = authenticate()
     service = build('sheets', 'v4', credentials=creds)
 
-    # Verify write access by reading spreadsheet metadata
     spreadsheet = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
     print(f"Successfully accessed spreadsheet: {spreadsheet['properties']['title']}")
 
-    # Find sheet name by gid
     sheet_name = None
     for sheet in spreadsheet['sheets']:
         props = sheet['properties']
