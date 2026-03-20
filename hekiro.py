@@ -90,27 +90,28 @@ def update_sheet(service, spreadsheet_id, sheet_name, csv_file):
                     'range': f"'{sheet_name}'!C{row_num}",
                     'values': [[row[1]]],
                 })
-            if len(row) > 2 and row[2]:
+            # CSV[2] is UE level (skipped)
+            if len(row) > 3 and row[3]:
                 updates.append({
                     'range': f"'{sheet_name}'!E{row_num}",
-                    'values': [[row[2]]],
+                    'values': [[row[3]]],
                 })
-            # Skill levels: CSV[3..6] -> columns G,H,I,J
-            if len(row) > 6:
+            # Skill levels: CSV[4..7] -> columns G,H,I,J
+            if len(row) > 7:
                 updates.append({
                     'range': f"'{sheet_name}'!G{row_num}:J{row_num}",
-                    'values': [[row[3], row[4], row[5], row[6]]],
+                    'values': [[row[4], row[5], row[6], row[7]]],
                 })
-            # Equipment levels: CSV[7..9] -> columns L,M,N (empty -> なし)
-            if len(row) > 9:
-                equips = [v if v else 'なし' for v in row[7:10]]
+            # Equipment levels: CSV[8..10] -> columns L,M,N (empty -> なし)
+            if len(row) > 10:
+                equips = [v if v else 'なし' for v in row[8:11]]
                 updates.append({
                     'range': f"'{sheet_name}'!L{row_num}:N{row_num}",
                     'values': [equips],
                 })
-            # 愛用品: CSV[10] -> column O
-            if len(row) > 10:
-                csv_fav_item = row[10]
+            # 愛用品: CSV[11] -> column O
+            if len(row) > 11:
+                csv_fav_item = row[11]
                 existing_fav_item = name_to_fav_item.get(name, '')
                 if csv_fav_item:
                     # Has 愛用品 tier: write 1 or 2
@@ -124,15 +125,15 @@ def update_sheet(service, spreadsheet_id, sheet_name, csv_file):
                         'range': f"'{sheet_name}'!O{row_num}",
                         'values': [['なし']],
                     })
-            # 絆: CSV[11] -> column P
-            if len(row) > 11 and row[11]:
+            # 絆: CSV[12] -> column P
+            if len(row) > 12 and row[12]:
                 updates.append({
                     'range': f"'{sheet_name}'!P{row_num}",
-                    'values': [[row[11]]],
+                    'values': [[row[12]]],
                 })
-            # WB levels: CSV[12..14] -> columns Q,R,S (empty -> なし)
-            if len(row) > 14:
-                wb = [v if v else 'なし' for v in row[12:15]]
+            # WB levels: CSV[13..15] -> columns Q,R,S (empty -> なし)
+            if len(row) > 15:
+                wb = [v if v else 'なし' for v in row[13:16]]
                 updates.append({
                     'range': f"'{sheet_name}'!Q{row_num}:S{row_num}",
                     'values': [wb],

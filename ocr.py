@@ -89,6 +89,10 @@ def process_image(image):
     bond = int(re.sub(r'\D', '', bond_text))
     yellow_stars, blue_stars = count_stars(image)
 
+    ue_text, _ = ocr_area(image, [778, 451], [838, 474])
+    m = re.search(r'[Ll][Vv]\.?(\d+)', ue_text)
+    ue_lv = int(m.group(1)) if m else None
+
     wb_coords = [
         [774, 231, 819, 254],   # HP
         [996, 233, 1038, 251],  # ATK
@@ -122,6 +126,7 @@ def process_image(image):
         'stars': '★' * yellow_stars + '☆' * blue_stars,
         'skills': skill_lvs,
         'equip': equip_tiers,
+        'ue_lv': ue_lv,
         'wb': wb_lvs,
     }
 
@@ -130,7 +135,7 @@ def fmt(value):
 
 def print_result(result):
     r = result
-    fields = [r['name'], r['stars'], r['lv']] + r['skills'] + r['equip'] + [r['bond']] + r['wb']
+    fields = [r['name'], r['stars'], r['ue_lv'], r['lv']] + r['skills'] + r['equip'] + [r['bond']] + r['wb']
     print(",".join(fmt(f) for f in fields))
 
 def main():
