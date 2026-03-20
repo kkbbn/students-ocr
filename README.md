@@ -14,7 +14,8 @@ $ pip3 install -r requirements.txt
 
 ### 実行
 
-解像度 1280x720 の環境 (例: MuMu Player) でスクリーンショットを撮り、ocr.py に読み込ませてください。
+解像度 1280x720 の環境でスクリーンショットを撮り、ocr.py に読み込ませてください。
+解像度を 1280x720 に設定したMuMu Playerで動作を確認しています。
 
 ```
 $ python3 ocr.py *.png
