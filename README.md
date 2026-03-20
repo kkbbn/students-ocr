@@ -2,15 +2,15 @@
 
 OCR screenshots of students
 
-## Setup
+## OCR
+
+### Setup
 
 ```
 $ pip3.10 install -r requirements.txt
 ```
 
-## Run
-
-### OCR
+### Run
 
 The size of input screenshots must be 1280x720.
 
@@ -27,7 +27,9 @@ $ python3.10 ocr.py *.png
 ...
 ```
 
-### Google Sheets
+## Google Sheets
+
+### Setup
 
 1. Go to https://console.cloud.google.com/
 2. Create or select a project
@@ -51,7 +53,22 @@ Create OAuth Client ID (APIs & Services > Credentials):
 4. Click Create
 5. Click Download JSON and save it as credentials.json in this project directory
 
-You can then update Hekiro's students spreadsheet.
+### Update: ブルアカ育成計算機
+
+You can update [ブルアカ育成計算機](https://x.com/makoto_149/status/2020066203759440190).
+
+Open a spreadsheet, click the `ﾃﾞｰﾀｼｰﾄ`  sheet, and copy the URL. Give it to `calc.py` as follows:
+
+```
+$ python3.10 ocr.py *.png > output.csv
+$ python3.10 calc.py output.csv 'https://docs.google.com/spreadsheets/d/[SHEET_ID]/edit?gid=[GID]'
+```
+
+### Update: 育成状況確認シート
+
+You can update 育成状況確認シート used by 壁炉の家・暖炉の家.
+
+Open a spreadsheet, click the `育成状況確認` sheet, and copy the URL. Give it to `hekiro.py` as follows:
 
 ```
 $ python3.10 ocr.py *.png > output.csv
